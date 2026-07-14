@@ -321,8 +321,8 @@
             'use strict';
 
             // ─── YOUR CREDENTIALS ───────────────────────────
-            const BOARD_ID = '6a5628c58f40bc13189ae8bd';
-            const PRIVATE_KEY = 'A7Nc4ucYkkin6hLt9rQl1wNlZLE23CJkKDqgdn6_R9ig';
+            const BOARD_ID = '6a5628c58f40bc13189ae8bd';      // used for reading
+            const PRIVATE_KEY = 'A7Nc4ucYkkin6hLt9rQl1wNlZLE23CJkKDqgdn6_R9ig'; // used for writing
             const ALLORIGINS = 'https://api.allorigins.win/get?url=';
 
             // ─── DOM refs ────────────────────────────────────
@@ -337,17 +337,18 @@
             const statusBadge = document.getElementById('statusBadge');
 
             // ─── helpers ────────────────────────────────────
-            function showMessage(text, type = 'info', isRetryable = false) {
+            function showMessage(text, type = 'info', isRetryable = false, retryAction = '') {
                 msgEl.className = 'msg show ' + type;
                 if (isRetryable) {
-                    msgEl.innerHTML = `${text} <button class="retry-btn" data-retry="true">Retry</button>`;
+                    msgEl.innerHTML = `${text} <button class="retry-btn" data-retry="${retryAction}">Retry</button>`;
                 } else {
                     msgEl.textContent = text;
                 }
-                // Attach event listener for retry button (delegated)
-                msgEl.querySelector('.retry-btn')?.addEventListener('click', () => {
-                    if (msgEl.dataset.retryAction === 'load') loadLeaderboard(true);
-                    else if (msgEl.dataset.retryAction === 'submit') {
+                // Remove old listener, add new one via delegation
+                msgEl.querySelector('.retry-btn')?.addEventListener('click', (e) => {
+                    const action = e.target.dataset.retry;
+                    if (action === 'load') loadLeaderboard(true);
+                    else if (action === 'submit') {
                         const name = nameInput.value;
                         const score = scoreInput.value;
                         submitScore(name, score);
@@ -358,7 +359,6 @@
             function hideMessage() {
                 msgEl.className = 'msg';
                 msgEl.textContent = '';
-                msgEl.dataset.retryAction = '';
             }
 
             function setLoading(loading) {
@@ -385,7 +385,7 @@
                 }
             }
 
-            // ─── fetch leaderboard ──────────────────────────
+            // ─── fetch leaderboard (READ) ───────────────────
             async function fetchLeaderboard() {
                 if (!navigator.onLine) throw new Error('You are offline. Please check your connection.');
                 const url = `http://dreamlo.com/lb/${BOARD_ID}/json`;
@@ -449,12 +449,11 @@
                     countLabel.textContent = '—';
                     setStatus('● error', '#d45a5a');
                     const msg = err.message.includes('offline') ? err.message : 'Failed to fetch records.';
-                    showMessage(msg, 'error', true);
-                    msgEl.dataset.retryAction = 'load';
+                    showMessage(msg, 'error', true, 'load');
                 }
             }
 
-            // ─── submit score ──────────────────────────────
+            // ─── submit score (WRITE) ──────────────────────
             async function submitScore(name, score) {
                 const cleanName = name.trim().slice(0, 60);
                 if (!cleanName) {
@@ -471,9 +470,10 @@
                     return false;
                 }
 
+                // ✅ CORRECT WRITE URL: uses PRIVATE_KEY as the board ID, no extra key at the end
                 const encodedName = encodeURIComponent(cleanName);
                 const encodedScore = encodeURIComponent(Math.floor(numScore));
-                const url = `http://dreamlo.com/lb/${BOARD_ID}/add/${encodedName}/${encodedScore}/${PRIVATE_KEY}`;
+                const url = `http://dreamlo.com/lb/${PRIVATE_KEY}/add/${encodedName}/${encodedScore}`;
                 const proxyUrl = ALLORIGINS + encodeURIComponent(url);
 
                 setLoading(true);
@@ -482,11 +482,12 @@
                 try {
                     const data = await fetchWithRetry(proxyUrl, 3, 1000);
                     const responseText = (data.contents || '').trim();
+                    // Dreamlo returns "OK" on success, or an error string like "ERROR:Invalid name"
                     if (responseText.toUpperCase() === 'OK') {
                         showMessage(`✅ Record saved! ${cleanName} · ${numScore.toLocaleString()}`, 'success');
                         nameInput.value = '';
                         scoreInput.value = '';
-                        // Refresh the leaderboard silently after a short delay
+                        // Refresh the leaderboard after a short delay
                         setTimeout(() => loadLeaderboard(false), 500);
                         return true;
                     } else {
@@ -494,8 +495,7 @@
                     }
                 } catch (err) {
                     console.error(err);
-                    showMessage(`❌ Submission failed: ${err.message}`, 'error', true);
-                    msgEl.dataset.retryAction = 'submit';
+                    showMessage(`❌ Submission failed: ${err.message}`, 'error', true, 'submit');
                     return false;
                 } finally {
                     setLoading(false);
@@ -510,7 +510,7 @@
 
             refreshBtn.addEventListener('click', () => loadLeaderboard(true));
 
-            // Auto‑refresh every 30 seconds, but not if page is hidden
+            // Auto‑refresh every 30 seconds (only when tab is visible)
             let autoRefreshInterval = setInterval(() => {
                 if (!document.hidden) loadLeaderboard(false);
             }, 30000);
@@ -519,7 +519,7 @@
                 if (!document.hidden) loadLeaderboard(false);
             });
 
-            // Detect online/offline changes
+            // Online / offline detection
             window.addEventListener('online', () => {
                 setStatus('● back online', '#4ac78a');
                 loadLeaderboard(true);
@@ -540,7 +540,7 @@
                 submitScore,
                 reload: loadLeaderboard
             };
-            console.log('🏆 Dreamlo leaderboard (final) ready.');
+            console.log('🏆 Dreamlo leaderboard (final, fixed write URL) ready.');
         })();
     </script>
 </body>
