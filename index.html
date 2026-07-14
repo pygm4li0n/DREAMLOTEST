@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dreamlo Leaderboard</title>
     <style>
-        /* ── reset & base ── */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -30,14 +29,18 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
             border: 1px solid #2a3344;
         }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
         h1 {
             font-size: 1.9rem;
             font-weight: 700;
-            letter-spacing: -0.02em;
             background: linear-gradient(135deg, #b7c9ff, #7aa3ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.2rem;
         }
         .sub {
             color: #7e8aa8;
@@ -177,6 +180,7 @@
             font-size: 0.8rem;
             padding: 0.2rem 0.8rem;
             border-radius: 20px;
+            transition: 0.2s;
         }
         .lb-refresh:hover {
             color: #b7c9ff;
@@ -210,6 +214,7 @@
             background: #111a26;
             border-radius: 12px;
             border: 1px solid #1f293b;
+            transition: 0.15s;
         }
         .lb-item:hover {
             background: #17212f;
@@ -246,6 +251,30 @@
             padding: 2rem 0;
             font-size: 0.95rem;
         }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .retry-btn {
+            background: #3a5daa;
+            border: none;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+        .retry-btn:hover {
+            background: #4a6dba;
+        }
         @media (max-width: 540px) {
             .card { padding: 1.5rem; }
             .form-row { flex-direction: column; }
@@ -255,13 +284,13 @@
 </head>
 <body>
     <div class="card" id="app">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+        <div class="header">
             <h1>🏆 Leaderboard</h1>
             <button class="lb-refresh" id="refreshBtn">⟳ refresh</button>
         </div>
         <div class="sub">
             <span>board: 6a56…e8bd</span>
-            <span id="statusBadge">● connecting…</span>
+            <span id="statusBadge">● ready</span>
         </div>
 
         <div class="msg" id="msg"></div>
@@ -269,7 +298,7 @@
         <form id="scoreForm" class="form-row">
             <div class="form-group">
                 <label for="nameInput">Player name</label>
-                <input type="text" id="nameInput" placeholder="e.g. Carmine" required />
+                <input type="text" id="nameInput" placeholder="e.g. Carmine" autocomplete="off" required />
             </div>
             <div class="form-group">
                 <label for="scoreInput">Score</label>
@@ -308,27 +337,60 @@
             const statusBadge = document.getElementById('statusBadge');
 
             // ─── helpers ────────────────────────────────────
-            function showMessage(text, type = 'info') {
-                msgEl.textContent = text;
+            function showMessage(text, type = 'info', isRetryable = false) {
                 msgEl.className = 'msg show ' + type;
+                if (isRetryable) {
+                    msgEl.innerHTML = `${text} <button class="retry-btn" data-retry="true">Retry</button>`;
+                } else {
+                    msgEl.textContent = text;
+                }
+                // Attach event listener for retry button (delegated)
+                msgEl.querySelector('.retry-btn')?.addEventListener('click', () => {
+                    if (msgEl.dataset.retryAction === 'load') loadLeaderboard(true);
+                    else if (msgEl.dataset.retryAction === 'submit') {
+                        const name = nameInput.value;
+                        const score = scoreInput.value;
+                        submitScore(name, score);
+                    }
+                });
             }
+
             function hideMessage() {
                 msgEl.className = 'msg';
                 msgEl.textContent = '';
-            }
-            function setLoading(loading) {
-                submitBtn.disabled = loading;
-                submitBtn.textContent = loading ? 'Sending …' : 'Submit';
+                msgEl.dataset.retryAction = '';
             }
 
-            // ─── fetch leaderboard (via AllOrigins) ────────
+            function setLoading(loading) {
+                submitBtn.disabled = loading;
+                submitBtn.innerHTML = loading ? `<span class="spinner"></span> Sending …` : 'Submit';
+            }
+
+            function setStatus(text, color = '#7e8aa8') {
+                statusBadge.textContent = text;
+                statusBadge.style.color = color;
+            }
+
+            // ─── fetch with retry ───────────────────────────
+            async function fetchWithRetry(url, retries = 3, delay = 1000) {
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const resp = await fetch(url);
+                        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                        return await resp.json();
+                    } catch (err) {
+                        if (i === retries - 1) throw err;
+                        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+                    }
+                }
+            }
+
+            // ─── fetch leaderboard ──────────────────────────
             async function fetchLeaderboard() {
+                if (!navigator.onLine) throw new Error('You are offline. Please check your connection.');
                 const url = `http://dreamlo.com/lb/${BOARD_ID}/json`;
                 const proxyUrl = ALLORIGINS + encodeURIComponent(url);
-                const resp = await fetch(proxyUrl);
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const data = await resp.json();
-                // data.contents is the raw JSON string from Dreamlo
+                const data = await fetchWithRetry(proxyUrl, 3, 1000);
                 const json = JSON.parse(data.contents);
                 let entries = [];
                 if (json.dreamlo && json.dreamlo.leaderboard && json.dreamlo.leaderboard.entry) {
@@ -345,7 +407,6 @@
                     countLabel.textContent = '0 entries';
                     return;
                 }
-                // sort descending by score
                 const sorted = [...entries].sort((a, b) => (parseInt(b.score) || 0) - (parseInt(a.score) || 0));
                 let html = '';
                 sorted.forEach((item, idx) => {
@@ -354,12 +415,12 @@
                     if (rank === 1) rankClass += ' gold';
                     else if (rank === 2) rankClass += ' silver';
                     else if (rank === 3) rankClass += ' bronze';
-                    const name = item.name || 'Anonymous';
+                    const name = escapeHtml(item.name || 'Anonymous');
                     const score = parseInt(item.score) || 0;
                     html += `
                         <li class="lb-item">
                             <span class="${rankClass}">#${rank}</span>
-                            <span class="lb-name">${escapeHtml(name)}</span>
+                            <span class="lb-name">${name}</span>
                             <span class="lb-score">${score.toLocaleString()}</span>
                         </li>
                     `;
@@ -376,31 +437,24 @@
 
             // ─── load & display ─────────────────────────────
             async function loadLeaderboard(showStatus = true) {
-                if (showStatus) {
-                    statusBadge.textContent = '⟳ loading …';
-                    statusBadge.style.color = '#b7c9ff';
-                }
+                if (showStatus) setStatus('⟳ loading …', '#b7c9ff');
+                hideMessage();
                 try {
                     const entries = await fetchLeaderboard();
                     renderLeaderboard(entries);
-                    if (showStatus) {
-                        statusBadge.textContent = '● synced';
-                        statusBadge.style.color = '#4ac78a';
-                    }
-                    hideMessage();
+                    setStatus('● synced', '#4ac78a');
                 } catch (err) {
                     console.error(err);
                     lbList.innerHTML = `<li class="lb-empty">⚠️ Could not load leaderboard</li>`;
                     countLabel.textContent = '—';
-                    if (showStatus) {
-                        statusBadge.textContent = '● error';
-                        statusBadge.style.color = '#d45a5a';
-                    }
-                    showMessage('Failed to fetch records: ' + err.message, 'error');
+                    setStatus('● error', '#d45a5a');
+                    const msg = err.message.includes('offline') ? err.message : 'Failed to fetch records.';
+                    showMessage(msg, 'error', true);
+                    msgEl.dataset.retryAction = 'load';
                 }
             }
 
-            // ─── submit score (via AllOrigins) ──────────────
+            // ─── submit score ──────────────────────────────
             async function submitScore(name, score) {
                 const cleanName = name.trim().slice(0, 60);
                 if (!cleanName) {
@@ -408,8 +462,12 @@
                     return false;
                 }
                 const numScore = Number(score);
-                if (!Number.isFinite(numScore) || numScore < 0) {
-                    showMessage('Please enter a valid score (0 or greater).', 'error');
+                if (!Number.isFinite(numScore) || numScore < 0 || !Number.isInteger(numScore)) {
+                    showMessage('Please enter a valid integer score (0 or greater).', 'error');
+                    return false;
+                }
+                if (!navigator.onLine) {
+                    showMessage('You are offline. Please connect to submit.', 'error');
                     return false;
                 }
 
@@ -422,23 +480,22 @@
                 hideMessage();
 
                 try {
-                    const resp = await fetch(proxyUrl);
-                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                    const result = await resp.json();
-                    // Dreamlo returns "OK" as plain text inside result.contents
-                    const responseText = (result.contents || '').trim();
+                    const data = await fetchWithRetry(proxyUrl, 3, 1000);
+                    const responseText = (data.contents || '').trim();
                     if (responseText.toUpperCase() === 'OK') {
-                        showMessage(`✅ Record saved! ${cleanName} · ${Math.floor(numScore).toLocaleString()}`, 'success');
+                        showMessage(`✅ Record saved! ${cleanName} · ${numScore.toLocaleString()}`, 'success');
                         nameInput.value = '';
                         scoreInput.value = '';
-                        await loadLeaderboard(true);
+                        // Refresh the leaderboard silently after a short delay
+                        setTimeout(() => loadLeaderboard(false), 500);
                         return true;
                     } else {
                         throw new Error(responseText || 'Unknown error');
                     }
                 } catch (err) {
                     console.error(err);
-                    showMessage(`❌ Submission failed: ${err.message}`, 'error');
+                    showMessage(`❌ Submission failed: ${err.message}`, 'error', true);
+                    msgEl.dataset.retryAction = 'submit';
                     return false;
                 } finally {
                     setLoading(false);
@@ -453,13 +510,37 @@
 
             refreshBtn.addEventListener('click', () => loadLeaderboard(true));
 
-            // initial load & auto-refresh
-            loadLeaderboard(true);
-            setInterval(() => loadLeaderboard(false), 30000);
+            // Auto‑refresh every 30 seconds, but not if page is hidden
+            let autoRefreshInterval = setInterval(() => {
+                if (!document.hidden) loadLeaderboard(false);
+            }, 30000);
 
-            // expose for console debugging
-            window.__dreamlo = { BOARD_ID, PRIVATE_KEY, fetchLeaderboard, submitScore, reload: loadLeaderboard };
-            console.log('🏆 Dreamlo leaderboard ready (with AllOrigins).');
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) loadLeaderboard(false);
+            });
+
+            // Detect online/offline changes
+            window.addEventListener('online', () => {
+                setStatus('● back online', '#4ac78a');
+                loadLeaderboard(true);
+            });
+            window.addEventListener('offline', () => {
+                setStatus('● offline', '#d45a5a');
+                showMessage('You are offline. Some features may not work.', 'error');
+            });
+
+            // ─── initial load ───────────────────────────────
+            loadLeaderboard(true);
+
+            // ─── expose for debugging ──────────────────────
+            window.__dreamlo = {
+                BOARD_ID,
+                PRIVATE_KEY,
+                fetchLeaderboard,
+                submitScore,
+                reload: loadLeaderboard
+            };
+            console.log('🏆 Dreamlo leaderboard (final) ready.');
         })();
     </script>
 </body>
