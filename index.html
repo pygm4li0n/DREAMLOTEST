@@ -1,65 +1,466 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Dreamlo Leaderboard</title>
-<style>
-  /* (paste your styles from the earlier snippet – same as before) */
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dreamlo Leaderboard</title>
+    <style>
+        /* ── reset & base ── */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0b0e14;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            color: #e8edf5;
+        }
+        .card {
+            max-width: 760px;
+            width: 100%;
+            background: #141a24;
+            border-radius: 2rem;
+            padding: 2rem 2.2rem 2.6rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            border: 1px solid #2a3344;
+        }
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #b7c9ff, #7aa3ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.2rem;
+        }
+        .sub {
+            color: #7e8aa8;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            border-left: 3px solid #2a3a5a;
+            padding-left: 0.9rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1.2rem;
+        }
+        .sub span {
+            background: #1f293b;
+            padding: 0.15rem 0.7rem;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.02em;
+            color: #9bb1d9;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.9rem;
+            margin-bottom: 1.8rem;
+        }
+        .form-group {
+            flex: 1 1 180px;
+            min-width: 140px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #7e8aa8;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            background: #1a2330;
+            border: 1px solid #2d3a4e;
+            border-radius: 14px;
+            color: #e8edf5;
+            font-size: 1rem;
+            transition: 0.2s;
+            outline: none;
+            font-weight: 500;
+        }
+        .form-group input:focus {
+            border-color: #5a7fd4;
+            box-shadow: 0 0 0 3px rgba(90, 127, 212, 0.2);
+            background: #1e293b;
+        }
+        .form-group input::placeholder {
+            color: #4a5a78;
+            font-weight: 400;
+        }
+        .btn {
+            background: #2d4a8a;
+            border: none;
+            border-radius: 14px;
+            padding: 0.7rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            align-self: flex-end;
+            margin-bottom: 0.2rem;
+            border: 1px solid #3e5fa0;
+        }
+        .btn:hover {
+            background: #3a5daa;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .msg {
+            padding: 0.6rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.4rem;
+            font-size: 0.9rem;
+            display: none;
+            background: #1a2330;
+            border-left: 4px solid #4a6a9a;
+        }
+        .msg.show {
+            display: block;
+        }
+        .msg.error {
+            border-left-color: #d45a5a;
+            background: #2a1a1a;
+            color: #ffb3b3;
+        }
+        .msg.success {
+            border-left-color: #4ac78a;
+            background: #142a1e;
+            color: #a3f0c5;
+        }
+        .msg.info {
+            border-left-color: #5a7fd4;
+            background: #1a233a;
+            color: #b7c9ff;
+        }
+        .lb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 1.8rem 0 0.8rem 0;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid #1f2a3a;
+        }
+        .lb-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #c8d6f0;
+        }
+        .lb-header .count {
+            font-size: 0.75rem;
+            color: #5e749a;
+            background: #1a2330;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+        }
+        .lb-refresh {
+            background: none;
+            border: none;
+            color: #5e749a;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+        }
+        .lb-refresh:hover {
+            color: #b7c9ff;
+            background: #1f293b;
+        }
+        .lb-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 0.2rem;
+        }
+        .lb-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .lb-list::-webkit-scrollbar-track {
+            background: #0f1620;
+            border-radius: 10px;
+        }
+        .lb-list::-webkit-scrollbar-thumb {
+            background: #2d3a4e;
+            border-radius: 10px;
+        }
+        .lb-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 1rem;
+            background: #111a26;
+            border-radius: 12px;
+            border: 1px solid #1f293b;
+        }
+        .lb-item:hover {
+            background: #17212f;
+            border-color: #2a3a5a;
+        }
+        .lb-rank {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #5e749a;
+            min-width: 28px;
+            text-align: center;
+        }
+        .lb-rank.gold { color: #f7c948; }
+        .lb-rank.silver { color: #a8b8d8; }
+        .lb-rank.bronze { color: #cd8f6b; }
+        .lb-name {
+            flex: 1;
+            font-weight: 500;
+            color: #d6e0f5;
+            word-break: break-word;
+        }
+        .lb-score {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #8bb3ff;
+            background: #1a2538;
+            padding: 0.1rem 0.9rem;
+            border-radius: 40px;
+            font-variant-numeric: tabular-nums;
+        }
+        .lb-empty {
+            color: #4a5a78;
+            text-align: center;
+            padding: 2rem 0;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 540px) {
+            .card { padding: 1.5rem; }
+            .form-row { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+    </style>
 </head>
 <body>
-  <!-- same HTML structure as your earlier snippet -->
-  <div class="card">
-    ...
-  </div>
+    <div class="card" id="app">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <h1>🏆 Leaderboard</h1>
+            <button class="lb-refresh" id="refreshBtn">⟳ refresh</button>
+        </div>
+        <div class="sub">
+            <span>board: 6a56…e8bd</span>
+            <span id="statusBadge">● connecting…</span>
+        </div>
 
-  <script>
-    (function() {
-      'use strict';
+        <div class="msg" id="msg"></div>
 
-      // ─── CONFIG (update these) ──────────────────────────
-      const BOARD_ID = '6a5628c58f40bc13189ae8bd';
-      const PRIVATE_KEY = 'A7Nc4ucYkkin6hLt9rQl1wNlZLE23CJkKDqgdn6_R9ig';
-      const ALLORIGINS = 'https://api.allorigins.win/get?url=';
+        <form id="scoreForm" class="form-row">
+            <div class="form-group">
+                <label for="nameInput">Player name</label>
+                <input type="text" id="nameInput" placeholder="e.g. Carmine" required />
+            </div>
+            <div class="form-group">
+                <label for="scoreInput">Score</label>
+                <input type="number" id="scoreInput" placeholder="0" min="0" step="1" required />
+            </div>
+            <button type="submit" class="btn" id="submitBtn">Submit</button>
+        </form>
 
-      // ─── DOM refs ────────────────────────────────────────
-      // ... same as your earlier code ...
+        <div class="lb-header">
+            <h2>Rankings</h2>
+            <span class="count" id="countLabel">0 entries</span>
+        </div>
+        <ul class="lb-list" id="lbList">
+            <li class="lb-empty">Loading records …</li>
+        </ul>
+    </div>
 
-      // ─── Read leaderboard ───────────────────────────────
-      async function fetchLeaderboard() {
-        const url = `http://dreamlo.com/lb/${BOARD_ID}/json`;
-        const proxyUrl = ALLORIGINS + encodeURIComponent(url);
-        const resp = await fetch(proxyUrl);
-        const data = await resp.json();
-        // data.contents is the raw JSON string from Dreamlo
-        const json = JSON.parse(data.contents);
-        let entries = [];
-        if (json.dreamlo && json.dreamlo.leaderboard && json.dreamlo.leaderboard.entry) {
-          const raw = json.dreamlo.leaderboard.entry;
-          entries = Array.isArray(raw) ? raw : [raw];
-        }
-        return entries;
-      }
+    <script>
+        (function() {
+            'use strict';
 
-      // ─── Write score ─────────────────────────────────────
-      async function submitScore(name, score) {
-        const encodedName = encodeURIComponent(name.trim());
-        const encodedScore = encodeURIComponent(Math.floor(Number(score)));
-        const url = `http://dreamlo.com/lb/${BOARD_ID}/add/${encodedName}/${encodedScore}/${PRIVATE_KEY}`;
-        const proxyUrl = ALLORIGINS + encodeURIComponent(url);
-        const resp = await fetch(proxyUrl);
-        const result = await resp.json();
-        // result.contents should be "OK"
-        return result.contents.trim() === 'OK';
-      }
+            // ─── YOUR CREDENTIALS ───────────────────────────
+            const BOARD_ID = '6a5628c58f40bc13189ae8bd';
+            const PRIVATE_KEY = 'A7Nc4ucYkkin6hLt9rQl1wNlZLE23CJkKDqgdn6_R9ig';
+            const ALLORIGINS = 'https://api.allorigins.win/get?url=';
 
-      // ─── Render & UI ────────────────────────────────────
-      // ... reuse your render functions (with slight adjustments) ...
+            // ─── DOM refs ────────────────────────────────────
+            const form = document.getElementById('scoreForm');
+            const nameInput = document.getElementById('nameInput');
+            const scoreInput = document.getElementById('scoreInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const lbList = document.getElementById('lbList');
+            const countLabel = document.getElementById('countLabel');
+            const msgEl = document.getElementById('msg');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const statusBadge = document.getElementById('statusBadge');
 
-      // Expose for console
-      window.__dreamlo = { BOARD_ID, PRIVATE_KEY, fetchLeaderboard, submitScore };
-    })();
-  </script>
+            // ─── helpers ────────────────────────────────────
+            function showMessage(text, type = 'info') {
+                msgEl.textContent = text;
+                msgEl.className = 'msg show ' + type;
+            }
+            function hideMessage() {
+                msgEl.className = 'msg';
+                msgEl.textContent = '';
+            }
+            function setLoading(loading) {
+                submitBtn.disabled = loading;
+                submitBtn.textContent = loading ? 'Sending …' : 'Submit';
+            }
+
+            // ─── fetch leaderboard (via AllOrigins) ────────
+            async function fetchLeaderboard() {
+                const url = `http://dreamlo.com/lb/${BOARD_ID}/json`;
+                const proxyUrl = ALLORIGINS + encodeURIComponent(url);
+                const resp = await fetch(proxyUrl);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                // data.contents is the raw JSON string from Dreamlo
+                const json = JSON.parse(data.contents);
+                let entries = [];
+                if (json.dreamlo && json.dreamlo.leaderboard && json.dreamlo.leaderboard.entry) {
+                    const raw = json.dreamlo.leaderboard.entry;
+                    entries = Array.isArray(raw) ? raw : [raw];
+                }
+                return entries;
+            }
+
+            // ─── render leaderboard ─────────────────────────
+            function renderLeaderboard(entries) {
+                if (!entries || entries.length === 0) {
+                    lbList.innerHTML = `<li class="lb-empty">✨ No records yet — be the first!</li>`;
+                    countLabel.textContent = '0 entries';
+                    return;
+                }
+                // sort descending by score
+                const sorted = [...entries].sort((a, b) => (parseInt(b.score) || 0) - (parseInt(a.score) || 0));
+                let html = '';
+                sorted.forEach((item, idx) => {
+                    const rank = idx + 1;
+                    let rankClass = 'lb-rank';
+                    if (rank === 1) rankClass += ' gold';
+                    else if (rank === 2) rankClass += ' silver';
+                    else if (rank === 3) rankClass += ' bronze';
+                    const name = item.name || 'Anonymous';
+                    const score = parseInt(item.score) || 0;
+                    html += `
+                        <li class="lb-item">
+                            <span class="${rankClass}">#${rank}</span>
+                            <span class="lb-name">${escapeHtml(name)}</span>
+                            <span class="lb-score">${score.toLocaleString()}</span>
+                        </li>
+                    `;
+                });
+                lbList.innerHTML = html;
+                countLabel.textContent = `${sorted.length} entry${sorted.length !== 1 ? 's' : ''}`;
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ─── load & display ─────────────────────────────
+            async function loadLeaderboard(showStatus = true) {
+                if (showStatus) {
+                    statusBadge.textContent = '⟳ loading …';
+                    statusBadge.style.color = '#b7c9ff';
+                }
+                try {
+                    const entries = await fetchLeaderboard();
+                    renderLeaderboard(entries);
+                    if (showStatus) {
+                        statusBadge.textContent = '● synced';
+                        statusBadge.style.color = '#4ac78a';
+                    }
+                    hideMessage();
+                } catch (err) {
+                    console.error(err);
+                    lbList.innerHTML = `<li class="lb-empty">⚠️ Could not load leaderboard</li>`;
+                    countLabel.textContent = '—';
+                    if (showStatus) {
+                        statusBadge.textContent = '● error';
+                        statusBadge.style.color = '#d45a5a';
+                    }
+                    showMessage('Failed to fetch records: ' + err.message, 'error');
+                }
+            }
+
+            // ─── submit score (via AllOrigins) ──────────────
+            async function submitScore(name, score) {
+                const cleanName = name.trim().slice(0, 60);
+                if (!cleanName) {
+                    showMessage('Please enter a player name.', 'error');
+                    return false;
+                }
+                const numScore = Number(score);
+                if (!Number.isFinite(numScore) || numScore < 0) {
+                    showMessage('Please enter a valid score (0 or greater).', 'error');
+                    return false;
+                }
+
+                const encodedName = encodeURIComponent(cleanName);
+                const encodedScore = encodeURIComponent(Math.floor(numScore));
+                const url = `http://dreamlo.com/lb/${BOARD_ID}/add/${encodedName}/${encodedScore}/${PRIVATE_KEY}`;
+                const proxyUrl = ALLORIGINS + encodeURIComponent(url);
+
+                setLoading(true);
+                hideMessage();
+
+                try {
+                    const resp = await fetch(proxyUrl);
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const result = await resp.json();
+                    // Dreamlo returns "OK" as plain text inside result.contents
+                    const responseText = (result.contents || '').trim();
+                    if (responseText.toUpperCase() === 'OK') {
+                        showMessage(`✅ Record saved! ${cleanName} · ${Math.floor(numScore).toLocaleString()}`, 'success');
+                        nameInput.value = '';
+                        scoreInput.value = '';
+                        await loadLeaderboard(true);
+                        return true;
+                    } else {
+                        throw new Error(responseText || 'Unknown error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showMessage(`❌ Submission failed: ${err.message}`, 'error');
+                    return false;
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            // ─── event listeners ────────────────────────────
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await submitScore(nameInput.value, scoreInput.value);
+            });
+
+            refreshBtn.addEventListener('click', () => loadLeaderboard(true));
+
+            // initial load & auto-refresh
+            loadLeaderboard(true);
+            setInterval(() => loadLeaderboard(false), 30000);
+
+            // expose for console debugging
+            window.__dreamlo = { BOARD_ID, PRIVATE_KEY, fetchLeaderboard, submitScore, reload: loadLeaderboard };
+            console.log('🏆 Dreamlo leaderboard ready (with AllOrigins).');
+        })();
+    </script>
 </body>
 </html>
