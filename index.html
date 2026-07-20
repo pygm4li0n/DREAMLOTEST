@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NITRO CHAT // Epic Full-Screen</title>
     <style>
         /* =========================================================
@@ -145,8 +145,8 @@
             -webkit-backdrop-filter: blur(10px); position: relative;
         }
         .chat-header-bar {
-            height: var(--header-height); min-height: var(--header-height); padding: 0 20px;
-            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            height: var(--header-height); min-height: var(--header-height); padding: 0 16px;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
             border-bottom: 1px solid var(--border-subtle);
             background: rgba(15,15,35,0.7); backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px); flex-shrink: 0; position: relative; overflow: hidden;
@@ -166,19 +166,19 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text; text-transform: uppercase;
         }
-        .chat-header-bar .header-right { display: flex; align-items: center; gap: 8px; z-index: 1; flex-wrap: wrap; }
+        .chat-header-bar .header-right { display: flex; align-items: center; gap: 6px; z-index: 1; flex-wrap: wrap; }
         .badge-pill {
-            display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px;
-            font-size: 0.74rem; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);
             background: rgba(255,255,255,0.04); color: #c8c8e0; white-space: nowrap; transition: all 0.25s; cursor: default;
         }
         .badge-pill.connected-pill { border-color: rgba(74,222,128,0.4); color: #4ade80; }
         .badge-pill.disconnected-pill { border-color: rgba(255,64,96,0.5); color: #ff4060; animation: flashAlert 0.7s ease-in-out 3; }
         @keyframes flashAlert { 0%,100% { box-shadow: 0 0 8px rgba(255,64,96,0.4); } 50% { box-shadow: 0 0 20px rgba(255,64,96,0.9); } }
         .btn-icon {
-            width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.05);
+            width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.2); color: #c0c0d8; cursor: pointer;
-            font-size: 1rem; display: flex; align-items: center; justify-content: center;
+            font-size: 0.95rem; display: flex; align-items: center; justify-content: center;
             transition: all 0.3s; flex-shrink: 0;
         }
         .btn-icon:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); color: #fff; box-shadow: 0 0 14px rgba(255,255,255,0.12); }
@@ -192,6 +192,45 @@
             backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
         }
         .error-toast.visible { opacity: 1; }
+
+        /* ── Online count badge ── */
+        .online-count-badge {
+            background: rgba(0,229,255,0.1);
+            border: 1px solid rgba(0,229,255,0.25);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #b0f0ff;
+            white-space: nowrap;
+        }
+        .online-count-badge .dot {
+            width: 7px; height: 7px; border-radius: 50%; background: #4ade80;
+            box-shadow: 0 0 6px rgba(74,222,128,0.7);
+        }
+
+        /* ── Scroll‑to‑bottom button ── */
+        .scroll-bottom-btn {
+            position: absolute; bottom: 20px; right: 20px;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--metal-dark); border: 1px solid var(--border-glow);
+            color: #fff; cursor: pointer; display: none; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(0,229,255,0.2);
+            z-index: 15; font-size: 1.2rem; transition: all 0.3s;
+        }
+        .scroll-bottom-btn.visible { display: flex; }
+        .scroll-bottom-btn:hover { background: #2a2a48; border-color: var(--accent-cyan); box-shadow: var(--glow-cyan); }
+
+        /* ── Highlight for quoted message ── */
+        .msg-wrapper.highlight-flash {
+            animation: highlightFlash 0.8s ease-out;
+        }
+        @keyframes highlightFlash {
+            0% { background: rgba(0,229,255,0.15); }
+            100% { background: transparent; }
+        }
 
         /* ── Messages Container ── */
         .messages-container {
@@ -246,13 +285,26 @@
         .msg-image-wrap:hover { box-shadow: 0 0 20px rgba(0,229,255,0.25); border-color: rgba(0,229,255,0.4); }
         .msg-image-wrap img { display: block; width: 100%; height: auto; max-height: 350px; object-fit: cover; }
 
+        /* ── Reply reference block (with image thumbnail) ── */
         .reply-ref-block {
             background: rgba(0,229,255,0.05); border-left: 3px solid var(--accent-cyan);
-            padding: 4px 8px; border-radius: 0 8px 8px 0; margin-bottom: 6px;
-            font-size: 0.7rem; color: #80d0e8; display: flex; flex-direction: column; gap: 2px;
+            padding: 6px 8px; border-radius: 0 8px 8px 0; margin-bottom: 6px;
+            display: flex; align-items: flex-start; gap: 8px;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .reply-ref-block:hover { background: rgba(0,229,255,0.1); }
+        .reply-image-thumb {
+            width: 50px; height: 50px; border-radius: 6px; object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
+        }
+        .reply-text-content {
+            display: flex; flex-direction: column; gap: 2px; overflow: hidden;
         }
         .reply-ref-block .r-user { font-weight: 600; color: #00e5ff; font-size: 0.68rem; }
-        .reply-ref-block .r-text { opacity: 0.8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+        .reply-ref-block .r-text {
+            opacity: 0.8; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; max-width: 200px; font-size: 0.7rem; color: #80d0e8;
+        }
 
         .reactions-bar { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
         .reaction-btn {
@@ -368,6 +420,7 @@
         }
         .lightbox-overlay img { max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,229,255,0.2); object-fit: contain; }
 
+        /* ── Mobile improvements ── */
         @media (max-width: 768px) {
             .sidebar { position: fixed; top: 0; left: 0; height: 100%; z-index: 25; transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
@@ -377,12 +430,17 @@
             .msg-image-wrap { max-width: 220px; }
             #messageInput { font-size: 0.8rem; padding: 10px 12px; }
             button.send-btn-main { padding: 10px 14px; font-size: 0.75rem; }
+            .chat-header-bar { padding: 0 10px; }
+            .chat-header-bar .header-title { font-size: 0.85rem; }
+            .badge-pill { font-size: 0.65rem; padding: 3px 8px; }
+            .online-count-badge { font-size: 0.65rem; padding: 2px 6px; }
+            .conn-text-full { display: none; }
+            .user-pill-name { display: none; }
         }
     </style>
 </head>
 <body>
     <canvas id="particleCanvas"></canvas>
-
     <div class="overlay-full" id="nameOverlay">
         <div class="overlay-card">
             <h3>⚡ CREATE YOUR IDENTITY</h3>
@@ -397,9 +455,7 @@
             <button id="nameSubmitBtn">JOIN THE SCENE</button>
         </div>
     </div>
-
     <button class="sidebar-toggle hidden" id="sidebarToggle" title="Users">☰</button>
-
     <div class="app-shell" id="appShell">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -415,7 +471,6 @@
                 <span id="sidebarStatusText">Connecting…</span>
             </div>
         </aside>
-
         <main class="chat-panel" id="chatPanel">
             <div class="chat-header-bar">
                 <div class="header-left">
@@ -425,12 +480,16 @@
                 <div class="header-right">
                     <span class="badge-pill" id="connectionPill">
                         <span id="connDot" style="width:7px;height:7px;border-radius:50%;background:#ffc107;display:inline-block;"></span>
-                        <span id="connText">Connecting…</span>
+                        <span id="connText" class="conn-text-full">Connecting…</span>
+                    </span>
+                    <span class="online-count-badge" id="onlineCountBadge">
+                        <span class="dot"></span>
+                        <span id="onlineCountNumber">0</span>
                     </span>
                     <button class="btn-icon" id="refreshBtn" title="Reconnect"><span class="spin-icon">↻</span></button>
                     <span class="badge-pill" id="userPill" style="display:none;cursor:pointer;" title="You">
                         <span id="headerAvatar" style="width:20px;height:20px;border-radius:50%;background:#3a3a60;display:flex;align-items:center;justify-content:center;font-size:0.6rem;overflow:hidden;"></span>
-                        <span id="displayNamePill"></span>
+                        <span id="displayNamePill" class="user-pill-name"></span>
                         <span style="cursor:pointer;margin-left:2px;opacity:0.6;" id="changeNameBtn" title="Change name">✎</span>
                     </span>
                 </div>
@@ -439,6 +498,7 @@
             <div class="messages-container" id="messagesContainer">
                 <div class="empty-chat-hint" id="emptyHint">No messages yet. Spark the conversation ⚡</div>
             </div>
+            <button class="scroll-bottom-btn" id="scrollBottomBtn" title="Scroll to bottom">↓</button>
             <div class="input-area-bar" id="inputAreaBar" style="display:none;">
                 <div class="reply-indicator-bar hidden" id="replyIndicatorBar">
                     <span>↳ Replying to <strong id="replyToUserDisp"></strong></span>
@@ -458,7 +518,6 @@
             </div>
         </main>
     </div>
-
     <div class="lightbox-overlay hidden" id="lightboxOverlay">
         <img id="lightboxImg" src="" alt="Enlarged image">
     </div>
@@ -522,6 +581,8 @@
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');
             const emptyHint = document.getElementById('emptyHint');
+            const onlineCountNumber = document.getElementById('onlineCountNumber');
+            const scrollBottomBtn = document.getElementById('scrollBottomBtn');
 
             let replyingTo = null;
             let activePrivateChat = null;
@@ -710,6 +771,17 @@
                 }
             }
 
+            function scrollToMessage(msgId) {
+                const target = document.querySelector(`.msg-wrapper[data-msg-id="${msgId}"]`);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    target.classList.add('highlight-flash');
+                    setTimeout(() => target.classList.remove('highlight-flash'), 800);
+                } else {
+                    showErrorToast('Original message not found.');
+                }
+            }
+
             function renderMessage(msg) {
                 if(knownMessageIds.has(msg.id)) return;
                 knownMessageIds.add(msg.id);
@@ -724,23 +796,39 @@
                 if(msg.is_private) bubble.classList.add('private-msg');
                 let innerHTML = '';
                 if(msg.reply_to_username && msg.reply_to_message) {
-                    innerHTML += `<div class="reply-ref-block"><span class="r-user">↳ ${escapeHtml(msg.reply_to_username)}</span><span class="r-text">"${escapeHtml(truncateText(msg.reply_to_message,55))}"</span></div>`;
+                    let imageThumb = '';
+                    if (msg.reply_to_image_url) {
+                        imageThumb = `<img src="${escapeHtml(msg.reply_to_image_url)}" alt="replied image" class="reply-image-thumb">`;
+                    }
+                    innerHTML += `<div class="reply-ref-block" data-reply-to-id="${msg.reply_to_id || ''}">
+                        ${imageThumb}
+                        <div class="reply-text-content">
+                            <span class="r-user">↳ ${escapeHtml(msg.reply_to_username)}</span>
+                            <span class="r-text">"${escapeHtml(truncateText(msg.reply_to_message,55))}"</span>
+                        </div>
+                    </div>`;
                 }
                 innerHTML += `<div class="msg-username"><span class="msg-avatar">${getAvatarHTML(isOwn ? profilePic : '', msg.username)}</span> ${escapeHtml(msg.username)}${msg.is_private?' <span style="font-size:0.6rem;opacity:0.6;">🔒</span>':''}</div>`;
                 if(msg.message) innerHTML += `<div class="msg-text">${escapeHtml(msg.message)}</div>`;
                 if(msg.image_url) innerHTML += `<div class="msg-image-wrap" data-img-src="${escapeHtml(msg.image_url)}"><img src="${escapeHtml(msg.image_url)}" alt="shared image" loading="lazy"></div>`;
-                innerHTML += `<button class="reply-btn" data-msg-id="${msg.id}" data-username="${escapeHtml(msg.username)}" data-message="${escapeHtml(msg.message||'')}">↩ Reply</button>`;
+                innerHTML += `<button class="reply-btn" data-msg-id="${msg.id}" data-username="${escapeHtml(msg.username)}" data-message="${escapeHtml(msg.message||'')}" data-imageurl="${msg.image_url || ''}">↩ Reply</button>`;
                 innerHTML += `<div class="reactions-bar"></div>`;
                 bubble.innerHTML = innerHTML;
                 wrapper.appendChild(bubble);
                 messagesContainer.appendChild(wrapper);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
                 const replyBtn = bubble.querySelector('.reply-btn');
                 if(replyBtn) {
                     replyBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const btn = e.currentTarget;
-                        setReplyingTo({ id: btn.getAttribute('data-msg-id'), username: btn.getAttribute('data-username'), message: btn.getAttribute('data-message') });
+                        setReplyingTo({
+                            id: btn.getAttribute('data-msg-id'),
+                            username: btn.getAttribute('data-username'),
+                            message: btn.getAttribute('data-message'),
+                            imageUrl: btn.getAttribute('data-imageurl') || null
+                        });
                     });
                 }
                 const imgWrap = bubble.querySelector('.msg-image-wrap');
@@ -751,6 +839,13 @@
                         if(src) { lightboxImg.src = src; lightboxOverlay.classList.remove('hidden'); }
                     });
                 }
+                const replyRef = bubble.querySelector('.reply-ref-block');
+                if(replyRef && msg.reply_to_id) {
+                    replyRef.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        scrollToMessage(msg.reply_to_id);
+                    });
+                }
                 updateReactionUI(wrapper);
             }
 
@@ -759,7 +854,9 @@
                 if(ref) {
                     replyIndicatorBar.classList.remove('hidden');
                     replyToUserDisp.textContent = '@' + ref.username;
-                    replyPreviewDisp.textContent = '"' + truncateText(ref.message,40) + '"';
+                    let preview = truncateText(ref.message, 40);
+                    if (ref.imageUrl) preview = '🖼️ ' + preview;
+                    replyPreviewDisp.textContent = '"' + preview + '"';
                     messageInput.focus();
                 } else {
                     replyingTo = null;
@@ -819,6 +916,7 @@
                         });
                     }
                 });
+                onlineCountNumber.textContent = onlineUsers.size;
             }
             function buildSidebarItem(userName, isOnline, isPrivatePartner, isSelf=false) {
                 const initial = (userName.charAt(0)||'?').toUpperCase();
@@ -936,7 +1034,12 @@
                 if(!username) return;
                 sendBtn.disabled = true;
                 const payload = { username, message: message||null, image_url: imageUrl||null };
-                if(replyingTo && replyingTo.id) { payload.reply_to_id = replyingTo.id; payload.reply_to_username = replyingTo.username; payload.reply_to_message = replyingTo.message; }
+                if(replyingTo && replyingTo.id) {
+                    payload.reply_to_id = replyingTo.id;
+                    payload.reply_to_username = replyingTo.username;
+                    payload.reply_to_message = replyingTo.message;
+                    if(replyingTo.imageUrl) payload.reply_to_image_url = replyingTo.imageUrl;
+                }
                 if(activePrivateChat) { payload.is_private = true; payload.recipient = activePrivateChat; }
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -950,7 +1053,7 @@
                     clearTimeout(timeoutId);
                     if(!response.ok) {
                         if(payload.reply_to_id) {
-                            const fallback = {...payload}; delete fallback.reply_to_id; delete fallback.reply_to_username; delete fallback.reply_to_message;
+                            const fallback = {...payload}; delete fallback.reply_to_id; delete fallback.reply_to_username; delete fallback.reply_to_message; delete fallback.reply_to_image_url;
                             response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
                                 method: 'POST',
                                 headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
@@ -1041,6 +1144,18 @@
                 updateSidebarUI();
             }
 
+            function checkScrollPosition() {
+                if (messagesContainer.scrollTop + messagesContainer.clientHeight < messagesContainer.scrollHeight - 30) {
+                    scrollBottomBtn.classList.add('visible');
+                } else {
+                    scrollBottomBtn.classList.remove('visible');
+                }
+            }
+            messagesContainer.addEventListener('scroll', checkScrollPosition);
+            scrollBottomBtn.addEventListener('click', () => {
+                messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
+            });
+
             sendBtn.addEventListener('click', () => sendMessage());
             messageInput.addEventListener('keypress', (e) => { if(e.key==='Enter') sendMessage(); });
             cancelReplyBtn.addEventListener('click', () => setReplyingTo(null));
@@ -1117,7 +1232,7 @@
                 if(window.innerWidth<=768) sidebarToggle.classList.remove('hidden');
                 if(username) {
                     applyUsername(username);
-                    loadMessages().then(() => { messagesLoaded = true; });
+                    loadMessages().then(() => { messagesLoaded = true; checkScrollPosition(); });
                     subscribeToRealtime(); setupPresence(); subscribeToPrivateRequests(); loadPendingRequests();
                     loadReactionsForMessages();
                     subscribeToReactions();
