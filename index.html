@@ -588,11 +588,8 @@
             const STORAGE_BUCKET = 'chat-images';
             const AVATAR_BUCKET = 'chat-avatars';
 
-            // ── State & DOM ──────────────────────────────────
             const STORAGE_KEY_NAME = 'nitro_chat_username';
             const CLIENT_ID_KEY = 'nitro_chat_client_id';
-            const PRIVATE_PARTNERS_KEY = 'nitro_chat_private_partners';
-            const PROFILE_PIC_KEY = 'nitro_chat_profile_pic';
 
             let username = localStorage.getItem(STORAGE_KEY_NAME) || '';
             let clientId = localStorage.getItem(CLIENT_ID_KEY) || '';
@@ -600,13 +597,11 @@
                 clientId = 'c_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
                 localStorage.setItem(CLIENT_ID_KEY, clientId);
             }
-            let privatePartners = [];  // Not used anymore – only online users are shown
-            let profilePic = localStorage.getItem(PROFILE_PIC_KEY) || '';
-            let avatarCache = {};
 
+            let avatarCache = {};
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            // DOM elements
+            // DOM elements (abbreviated, all present in the HTML)
             const publicMessagesContainer = document.getElementById('publicMessagesContainer');
             const privateMessagesContainer = document.getElementById('privateMessagesContainer');
             const messageInput = document.getElementById('messageInput');
@@ -653,7 +648,7 @@
             const chatTabs = document.getElementById('chatTabs');
 
             let replyingTo = null;
-            let activePrivateChat = null;          // username of current private partner
+            let activePrivateChat = null;          // username of private partner
             let currentTab = 'public';
             let onlineUsers = new Map();
             let isConnected = false;
@@ -667,7 +662,7 @@
             let messageReactions = {};
             const EMOJIS = ['❤️','😂','😮','😢','😡'];
             let pendingImageUrl = null;
-            let profilePicFile = null;
+            let profilePicFile = null;   // holds the file to upload later
 
             // ── Particles (unchanged) ───────────────────────
             const particleCanvas = document.getElementById('particleCanvas');
@@ -726,6 +721,7 @@
             }
             requestAnimationFrame(animateParticles);
 
+            // ── Utility ──
             function escapeHtml(text) { const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}; return String(text).replace(/[&<>"']/g, m=>map[m]); }
             function truncateText(text, maxLen=45) { if(!text) return ''; return text.length > maxLen ? text.substring(0,maxLen)+'…' : text; }
             function showErrorToast(msg) {
@@ -799,6 +795,7 @@
                 return urlData.publicUrl;
             }
 
+            // Attach image for chat
             async function attachChatImage(file) {
                 uploadImgBtn.classList.add('uploading');
                 try {
@@ -1137,7 +1134,6 @@
                         if(req.status === 'pending' && req.to_user === username) {
                             pendingPrivateRequests.set(req.from_user, {status:'pending', id:req.id, from_user:req.from_user});
                         }
-                        // We do NOT store accepted partners – only online users matter
                     });
                     updateSidebarUI();
                 } catch(err) {}
