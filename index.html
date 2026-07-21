@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NITRO CHAT // Epic Full-Screen</title>
+    <title>NITRO CHAT // Epic Full‑Screen</title>
     <style>
         /* =========================================================
-           NITRO CHAT – EPIC UI
+           NITRO CHAT – EPIC UI (estilo completo)
         ========================================================= */
         :root {
             --bg-deep: #040410;
@@ -193,6 +193,23 @@
         }
         .error-toast.visible { opacity: 1; }
 
+        /* ── Chat Tabs ── */
+        .chat-tabs {
+            display: flex; border-bottom: 1px solid var(--border-subtle);
+            background: rgba(15,15,35,0.4); flex-shrink: 0;
+        }
+        .chat-tab {
+            flex: 1; padding: 10px 12px; text-align: center; cursor: pointer;
+            font-weight: 600; font-size: 0.8rem; color: var(--text-muted);
+            border-bottom: 2px solid transparent; transition: all 0.25s;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .chat-tab.active {
+            color: var(--accent-cyan); border-bottom-color: var(--accent-cyan);
+            background: rgba(0,229,255,0.05);
+        }
+        .chat-tab:hover { color: #fff; }
+
         /* ── Online count badge ── */
         .online-count-badge {
             background: rgba(0,229,255,0.1);
@@ -285,7 +302,7 @@
         .msg-image-wrap:hover { box-shadow: 0 0 20px rgba(0,229,255,0.25); border-color: rgba(0,229,255,0.4); }
         .msg-image-wrap img { display: block; width: 100%; height: auto; max-height: 350px; object-fit: cover; }
 
-        /* ── Reply reference block (with image thumbnail) ── */
+        /* ── Reply reference block (con miniatura) ── */
         .reply-ref-block {
             background: rgba(0,229,255,0.05); border-left: 3px solid var(--accent-cyan);
             padding: 6px 8px; border-radius: 0 8px 8px 0; margin-bottom: 6px;
@@ -297,9 +314,7 @@
             width: 50px; height: 50px; border-radius: 6px; object-fit: cover;
             border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
         }
-        .reply-text-content {
-            display: flex; flex-direction: column; gap: 2px; overflow: hidden;
-        }
+        .reply-text-content { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
         .reply-ref-block .r-user { font-weight: 600; color: #00e5ff; font-size: 0.68rem; }
         .reply-ref-block .r-text {
             opacity: 0.8; overflow: hidden; text-overflow: ellipsis;
@@ -351,10 +366,11 @@
             width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.18); color: #b0b0d0; cursor: pointer;
             font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s; flex-shrink: 0;
+            transition: all 0.3s; flex-shrink: 0; position: relative;
         }
         .btn-upload-img:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.35); color: #fff; }
         .btn-upload-img.uploading { animation: spin 0.8s linear infinite; border-color: var(--accent-cyan); box-shadow: var(--glow-cyan); }
+        .btn-upload-img.has-image { background: rgba(0,229,255,0.2); border-color: var(--accent-cyan); color: #fff; }
         button.send-btn-main {
             background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 40%, #4c1d95 100%);
             color: #fff; border: none; padding: 11px 22px; border-radius: var(--radius-md);
@@ -372,6 +388,25 @@
         button.send-btn-main:hover::before { opacity: 1; }
         button.send-btn-main:active { transform: scale(0.95); }
         button.send-btn-main:disabled { background: #3a3a55; box-shadow: none; cursor: not-allowed; color: #888; transform: none; }
+
+        /* ── Image preview row ── */
+        .image-preview-row {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.15);
+            border-radius: var(--radius-md); padding: 6px 10px;
+        }
+        .image-preview-thumb {
+            width: 40px; height: 40px; object-fit: cover; border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .image-preview-name {
+            flex: 1; font-size: 0.75rem; color: #b0d8f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .image-preview-remove {
+            background: none; border: none; color: #ff7088; cursor: pointer; font-weight: 700; font-size: 0.9rem;
+            padding: 2px 6px; border-radius: 4px; transition: all 0.2s;
+        }
+        .image-preview-remove:hover { background: rgba(255,64,96,0.2); }
 
         .overlay-full {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8);
@@ -441,6 +476,8 @@
 </head>
 <body>
     <canvas id="particleCanvas"></canvas>
+
+    <!-- Name Entry Overlay -->
     <div class="overlay-full" id="nameOverlay">
         <div class="overlay-card">
             <h3>⚡ CREATE YOUR IDENTITY</h3>
@@ -455,8 +492,11 @@
             <button id="nameSubmitBtn">JOIN THE SCENE</button>
         </div>
     </div>
+
     <button class="sidebar-toggle hidden" id="sidebarToggle" title="Users">☰</button>
+
     <div class="app-shell" id="appShell">
+        <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span class="s-icon">⚡</span>
@@ -471,6 +511,8 @@
                 <span id="sidebarStatusText">Connecting…</span>
             </div>
         </aside>
+
+        <!-- Chat Panel -->
         <main class="chat-panel" id="chatPanel">
             <div class="chat-header-bar">
                 <div class="header-left">
@@ -494,9 +536,19 @@
                     </span>
                 </div>
             </div>
+            <!-- Tabs -->
+            <div class="chat-tabs" id="chatTabs">
+                <div class="chat-tab active" data-tab="public">🌐 Public</div>
+                <div class="chat-tab" data-tab="private">🔒 Private</div>
+            </div>
             <div class="error-toast" id="errorToast"></div>
-            <div class="messages-container" id="messagesContainer">
-                <div class="empty-chat-hint" id="emptyHint">No messages yet. Spark the conversation ⚡</div>
+            <!-- Public messages -->
+            <div class="messages-container" id="publicMessagesContainer">
+                <div class="empty-chat-hint" id="publicEmptyHint">No messages yet. Spark the conversation ⚡</div>
+            </div>
+            <!-- Private messages (hidden by default) -->
+            <div class="messages-container hidden" id="privateMessagesContainer">
+                <div class="empty-chat-hint" id="privateEmptyHint">No private messages with this user.</div>
             </div>
             <button class="scroll-bottom-btn" id="scrollBottomBtn" title="Scroll to bottom">↓</button>
             <div class="input-area-bar" id="inputAreaBar" style="display:none;">
@@ -509,6 +561,11 @@
                     🔒 Private chat with <strong id="privateChatUserDisp"></strong>
                     <button class="cancel-btn" id="cancelPrivateBtn" style="color:#f0a500;">✕ End</button>
                 </div>
+                <div class="image-preview-row hidden" id="imagePreviewRow">
+                    <img class="image-preview-thumb" id="imagePreviewThumb" src="" alt="preview">
+                    <span class="image-preview-name" id="imagePreviewName"></span>
+                    <button class="image-preview-remove" id="imagePreviewRemove">✕</button>
+                </div>
                 <div class="input-row-wrap">
                     <input type="text" id="messageInput" placeholder="Type a message..." maxlength="500" autocomplete="off">
                     <button class="btn-upload-img" id="uploadImgBtn" title="Attach image (max 750px)">🖼</button>
@@ -518,6 +575,7 @@
             </div>
         </main>
     </div>
+
     <div class="lightbox-overlay hidden" id="lightboxOverlay">
         <img id="lightboxImg" src="" alt="Enlarged image">
     </div>
@@ -528,7 +586,9 @@
             const SUPABASE_URL = 'https://uxrpjfsouwxnlcbhjilz.supabase.co';
             const SUPABASE_ANON_KEY = 'sb_publishable_cLeBoHrdvg1b7WlnyJ-oVQ_6skjHc_H';
             const STORAGE_BUCKET = 'chat-images';
+            const AVATAR_BUCKET = 'chat-avatars';
 
+            // ── State & DOM ──────────────────────────────────
             const STORAGE_KEY_NAME = 'nitro_chat_username';
             const CLIENT_ID_KEY = 'nitro_chat_client_id';
             const PRIVATE_PARTNERS_KEY = 'nitro_chat_private_partners';
@@ -540,13 +600,15 @@
                 clientId = 'c_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
                 localStorage.setItem(CLIENT_ID_KEY, clientId);
             }
-            let privatePartners = [];
-            try { privatePartners = JSON.parse(localStorage.getItem(PRIVATE_PARTNERS_KEY) || '[]'); } catch(e) { privatePartners = []; }
+            let privatePartners = [];  // Not used anymore – only online users are shown
             let profilePic = localStorage.getItem(PROFILE_PIC_KEY) || '';
+            let avatarCache = {};
 
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            const messagesContainer = document.getElementById('messagesContainer');
+            // DOM elements
+            const publicMessagesContainer = document.getElementById('publicMessagesContainer');
+            const privateMessagesContainer = document.getElementById('privateMessagesContainer');
             const messageInput = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
             const errorToast = document.getElementById('errorToast');
@@ -580,12 +642,19 @@
             const lightboxImg = document.getElementById('lightboxImg');
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');
-            const emptyHint = document.getElementById('emptyHint');
+            const publicEmptyHint = document.getElementById('publicEmptyHint');
+            const privateEmptyHint = document.getElementById('privateEmptyHint');
             const onlineCountNumber = document.getElementById('onlineCountNumber');
             const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+            const imagePreviewRow = document.getElementById('imagePreviewRow');
+            const imagePreviewThumb = document.getElementById('imagePreviewThumb');
+            const imagePreviewName = document.getElementById('imagePreviewName');
+            const imagePreviewRemove = document.getElementById('imagePreviewRemove');
+            const chatTabs = document.getElementById('chatTabs');
 
             let replyingTo = null;
-            let activePrivateChat = null;
+            let activePrivateChat = null;          // username of current private partner
+            let currentTab = 'public';
             let onlineUsers = new Map();
             let isConnected = false;
             let messagesLoaded = false;
@@ -597,8 +666,10 @@
             let knownMessageIds = new Set();
             let messageReactions = {};
             const EMOJIS = ['❤️','😂','😮','😢','😡'];
+            let pendingImageUrl = null;
+            let profilePicFile = null;
 
-            // ── Particles ──
+            // ── Particles (unchanged) ───────────────────────
             const particleCanvas = document.getElementById('particleCanvas');
             const pCtx = particleCanvas.getContext('2d');
             let particles = [];
@@ -681,11 +752,23 @@
                     sidebarStatusText.textContent = 'Connecting…';
                 }
             }
-            function getAvatarHTML(dataUrl, name) {
-                if(dataUrl) return `<img src="${dataUrl}" alt="${escapeHtml(name)}">`;
-                return (name || '?')[0].toUpperCase();
+
+            // ── Avatar helpers ──
+            async function fetchAvatars(usernames) {
+                const unique = [...new Set(usernames.filter(u => u && !avatarCache[u]))];
+                if (unique.length === 0) return;
+                const { data, error } = await supabase.from('profiles').select('username, avatar_url').in('username', unique);
+                if (error) { console.warn('Error fetching avatars:', error); return; }
+                (data||[]).forEach(p => { avatarCache[p.username] = p.avatar_url; });
+            }
+            function getAvatarURL(user) { return avatarCache[user] || null; }
+            function renderAvatarHTML(user) {
+                const url = getAvatarURL(user);
+                if (url) return `<img src="${escapeHtml(url)}" alt="${escapeHtml(user)}" style="width:100%;height:100%;object-fit:cover;">`;
+                return (user || '?')[0].toUpperCase();
             }
 
+            // ── Upload helpers ──
             function resizeImage(file, maxDim=750) {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
@@ -705,26 +788,40 @@
                     img.src = URL.createObjectURL(file);
                 });
             }
-            async function uploadImageToStorage(file) {
-                console.log('📤 Subiendo imagen...');
-                const resized = await resizeImage(file, 750);
+            async function uploadToStorage(file, bucket, maxDim=750) {
+                const resized = await resizeImage(file, maxDim);
                 const filename = `public/${Date.now()}_${Math.random().toString(36).substr(2,6)}.jpg`;
-                const { data, error } = await supabase.storage.from(STORAGE_BUCKET).upload(filename, resized, {
-                    cacheControl: '3600',
-                    upsert: false,
-                    contentType: 'image/jpeg'
+                const { data, error } = await supabase.storage.from(bucket).upload(filename, resized, {
+                    cacheControl: '3600', upsert: false, contentType: 'image/jpeg'
                 });
-                if (error) {
-                    console.error('❌ Error al subir:', error);
-                    if (error.message?.includes('Bucket') || error.message?.includes('not found')) {
-                        throw new Error('Bucket "chat-images" no encontrado. Crea el bucket en Supabase Storage (público) y añade las políticas de seguridad.');
-                    }
-                    throw error;
-                }
-                const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(filename);
+                if (error) throw error;
+                const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filename);
                 return urlData.publicUrl;
             }
 
+            async function attachChatImage(file) {
+                uploadImgBtn.classList.add('uploading');
+                try {
+                    const url = await uploadToStorage(file, STORAGE_BUCKET);
+                    pendingImageUrl = url;
+                    imagePreviewThumb.src = url;
+                    imagePreviewName.textContent = file.name;
+                    imagePreviewRow.classList.remove('hidden');
+                    uploadImgBtn.classList.add('has-image');
+                } catch (err) {
+                    showErrorToast('Upload failed: ' + err.message);
+                } finally {
+                    uploadImgBtn.classList.remove('uploading');
+                }
+            }
+            function clearAttachedImage() {
+                pendingImageUrl = null;
+                imagePreviewRow.classList.add('hidden');
+                uploadImgBtn.classList.remove('has-image');
+                fileInput.value = '';
+            }
+
+            // ── Reactions ──
             async function loadReactionsForMessages() {
                 const { data, error } = await supabase.from('message_reactions').select('*');
                 if(error) return;
@@ -772,7 +869,8 @@
             }
 
             function scrollToMessage(msgId) {
-                const target = document.querySelector(`.msg-wrapper[data-msg-id="${msgId}"]`);
+                const container = currentTab === 'public' ? publicMessagesContainer : privateMessagesContainer;
+                const target = container.querySelector(`.msg-wrapper[data-msg-id="${msgId}"]`);
                 if (target) {
                     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     target.classList.add('highlight-flash');
@@ -782,18 +880,29 @@
                 }
             }
 
-            function renderMessage(msg) {
+            // ── Render message ──
+            async function renderMessage(msg) {
                 if(knownMessageIds.has(msg.id)) return;
                 knownMessageIds.add(msg.id);
-                if(msg.is_private && msg.username !== username && msg.recipient !== username) return;
+                const isPrivate = msg.is_private;
+                // Filter private messages: show only if we are participant
+                if(isPrivate && msg.username !== username && msg.recipient !== username) return;
+                const container = isPrivate ? privateMessagesContainer : publicMessagesContainer;
+                const emptyHint = isPrivate ? privateEmptyHint : publicEmptyHint;
                 if(emptyHint) emptyHint.style.display = 'none';
+
+                // Fetch avatar if missing
+                if (!getAvatarURL(msg.username)) {
+                    await fetchAvatars([msg.username]);
+                }
+
                 const isOwn = msg.username === username;
                 const wrapper = document.createElement('div');
                 wrapper.className = 'msg-wrapper' + (isOwn ? ' own' : '');
                 wrapper.setAttribute('data-msg-id', msg.id);
                 const bubble = document.createElement('div');
                 bubble.className = 'msg-bubble';
-                if(msg.is_private) bubble.classList.add('private-msg');
+                if(isPrivate) bubble.classList.add('private-msg');
                 let innerHTML = '';
                 if(msg.reply_to_username && msg.reply_to_message) {
                     let imageThumb = '';
@@ -808,15 +917,15 @@
                         </div>
                     </div>`;
                 }
-                innerHTML += `<div class="msg-username"><span class="msg-avatar">${getAvatarHTML(isOwn ? profilePic : '', msg.username)}</span> ${escapeHtml(msg.username)}${msg.is_private?' <span style="font-size:0.6rem;opacity:0.6;">🔒</span>':''}</div>`;
+                innerHTML += `<div class="msg-username"><span class="msg-avatar">${renderAvatarHTML(msg.username)}</span> ${escapeHtml(msg.username)}${isPrivate?' <span style="font-size:0.6rem;opacity:0.6;">🔒</span>':''}</div>`;
                 if(msg.message) innerHTML += `<div class="msg-text">${escapeHtml(msg.message)}</div>`;
                 if(msg.image_url) innerHTML += `<div class="msg-image-wrap" data-img-src="${escapeHtml(msg.image_url)}"><img src="${escapeHtml(msg.image_url)}" alt="shared image" loading="lazy"></div>`;
                 innerHTML += `<button class="reply-btn" data-msg-id="${msg.id}" data-username="${escapeHtml(msg.username)}" data-message="${escapeHtml(msg.message||'')}" data-imageurl="${msg.image_url || ''}">↩ Reply</button>`;
                 innerHTML += `<div class="reactions-bar"></div>`;
                 bubble.innerHTML = innerHTML;
                 wrapper.appendChild(bubble);
-                messagesContainer.appendChild(wrapper);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                container.appendChild(wrapper);
+                container.scrollTop = container.scrollHeight;
 
                 const replyBtn = bubble.querySelector('.reply-btn');
                 if(replyBtn) {
@@ -864,6 +973,44 @@
                     replyToUserDisp.textContent = ''; replyPreviewDisp.textContent = '';
                 }
             }
+
+            // ── Tab switching ──
+            function switchTab(tabName) {
+                currentTab = tabName;
+                const tabs = chatTabs.querySelectorAll('.chat-tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                const activeTab = chatTabs.querySelector(`[data-tab="${tabName}"]`);
+                if(activeTab) activeTab.classList.add('active');
+                if(tabName === 'public') {
+                    publicMessagesContainer.classList.remove('hidden');
+                    privateMessagesContainer.classList.add('hidden');
+                    privateIndicatorBar.classList.add('hidden');
+                    messageInput.placeholder = 'Type a message...';
+                } else {
+                    publicMessagesContainer.classList.add('hidden');
+                    privateMessagesContainer.classList.remove('hidden');
+                    if(activePrivateChat) {
+                        privateIndicatorBar.classList.remove('hidden');
+                        privateChatUserDisp.textContent = activePrivateChat;
+                        messageInput.placeholder = `Private message to ${activePrivateChat}...`;
+                    } else {
+                        privateIndicatorBar.classList.add('hidden');
+                        messageInput.placeholder = 'Select a partner from the sidebar first.';
+                    }
+                }
+            }
+            chatTabs.addEventListener('click', (e) => {
+                const tab = e.target.closest('.chat-tab');
+                if(!tab) return;
+                const tabName = tab.getAttribute('data-tab');
+                if(tabName === 'private' && !activePrivateChat) {
+                    showErrorToast('Select a private chat partner from the sidebar first.');
+                    return;
+                }
+                switchTab(tabName);
+            });
+
+            // ── Private chat management ──
             function setActivePrivateChat(partnerUsername) {
                 activePrivateChat = partnerUsername;
                 if(partnerUsername) {
@@ -871,38 +1018,44 @@
                     privateChatUserDisp.textContent = partnerUsername;
                     setReplyingTo(null);
                     messageInput.placeholder = `Private message to ${partnerUsername}...`;
-                    messageInput.focus();
+                    if(currentTab !== 'private') switchTab('private');
                 } else {
                     activePrivateChat = null;
                     privateIndicatorBar.classList.add('hidden');
                     privateChatUserDisp.textContent = '';
                     messageInput.placeholder = 'Type a message...';
+                    if(currentTab === 'private') switchTab('public');
                 }
                 updateSidebarUI();
             }
 
-            function updateSidebarUI() {
-                if(onlineUsers.size === 0 && privatePartners.length === 0) {
-                    sidebarUsers.innerHTML = '<div class="no-users-sidebar">No one else online</div>';
-                } else {
-                    let html = '';
-                    const rendered = new Set();
-                    privatePartners.forEach(partner => {
-                        if(!rendered.has(partner)) {
-                            rendered.add(partner);
-                            const isOnline = Array.from(onlineUsers.values()).some(u => u.username === partner);
-                            html += buildSidebarItem(partner, isOnline, true);
-                        }
-                    });
-                    onlineUsers.forEach((user) => {
-                        if(!rendered.has(user.username) && user.username !== username) {
-                            rendered.add(user.username);
-                            html += buildSidebarItem(user.username, true, privatePartners.includes(user.username));
-                        }
-                    });
-                    if(username && !rendered.has(username)) html += buildSidebarItem(username, true, false, true);
-                    sidebarUsers.innerHTML = html || '<div class="no-users-sidebar">No one else online</div>';
+            // ── Sidebar – ONLY online users ──
+            async function updateSidebarUI() {
+                const usersToFetch = [];
+                if (username) usersToFetch.push(username);
+                onlineUsers.forEach(u => usersToFetch.push(u.username));
+                await fetchAvatars(usersToFetch);
+
+                let html = '';
+                const rendered = new Set();
+                // Show current user
+                if(username && !rendered.has(username)) {
+                    html += buildSidebarItem(username, true, false, true);
+                    rendered.add(username);
                 }
+                onlineUsers.forEach((user) => {
+                    if(!rendered.has(user.username) && user.username !== username) {
+                        rendered.add(user.username);
+                        // Check for pending request from this user
+                        let isPending = pendingPrivateRequests.has(user.username) &&
+                            pendingPrivateRequests.get(user.username).status === 'pending' &&
+                            pendingPrivateRequests.get(user.username).from_user === user.username;
+                        html += buildSidebarItem(user.username, true, isPending);
+                    }
+                });
+                sidebarUsers.innerHTML = html || '<div class="no-users-sidebar">No one else online</div>';
+
+                // Attach click handlers
                 sidebarUsers.querySelectorAll('.sidebar-user-item').forEach(item => {
                     const userName = item.getAttribute('data-username');
                     const privateBtn = item.querySelector('.private-btn');
@@ -911,39 +1064,49 @@
                     }
                     if(userName !== username) {
                         item.addEventListener('click', () => {
-                            if(privatePartners.includes(userName)) setActivePrivateChat(userName);
-                            else handlePrivateChatClick(userName);
+                            if(activePrivateChat === userName) {
+                                switchTab('private');
+                            } else {
+                                handlePrivateChatClick(userName);
+                            }
                         });
                     }
                 });
                 onlineCountNumber.textContent = onlineUsers.size;
             }
-            function buildSidebarItem(userName, isOnline, isPrivatePartner, isSelf=false) {
-                const initial = (userName.charAt(0)||'?').toUpperCase();
+            function buildSidebarItem(userName, isOnline, isPending, isSelf=false) {
+                const avatarURL = getAvatarURL(userName);
+                const avatarHTML = avatarURL
+                    ? `<img src="${escapeHtml(avatarURL)}" alt="${escapeHtml(userName)}">`
+                    : (userName.charAt(0)||'?').toUpperCase();
                 let btnClass = 'private-btn', btnText = 'Request';
-                if(isPrivatePartner) { btnClass += ' accepted'; btnText = 'Chat ✓'; }
-                else if(pendingPrivateRequests.has(userName)) {
-                    const req = pendingPrivateRequests.get(userName);
-                    if(req.status==='pending' && req.from_user===userName) { btnClass += ' pending'; btnText = 'Accept?'; }
-                }
-                const avatarHTML = isSelf && profilePic ? `<img src="${profilePic}" alt="${escapeHtml(userName)}">` : initial;
-                return `<div class="sidebar-user-item${isSelf?' you-tag':''}${isPrivatePartner?' private-partner':''}" data-username="${escapeHtml(userName)}">
-                  <div class="user-avatar">${avatarHTML}${isOnline?'<span class="online-indicator"></span>':''}</div>
-                  <div class="user-info"><div class="user-name">${escapeHtml(userName)}</div><div class="user-status-text">${isSelf?'You':(isOnline?'Online':(isPrivatePartner?'Partner':'Offline'))}</div></div>
-                  ${!isSelf ? `<button class="${btnClass}">${btnText}</button>` : ''}
+                if(isPending) { btnClass += ' pending'; btnText = 'Accept?'; }
+                return `<div class="sidebar-user-item${isSelf?' you-tag':''}" data-username="${escapeHtml(userName)}">
+                    <div class="user-avatar">${avatarHTML}${isOnline?'<span class="online-indicator"></span>':''}</div>
+                    <div class="user-info"><div class="user-name">${escapeHtml(userName)}</div><div class="user-status-text">${isSelf?'You':'Online'}</div></div>
+                    ${!isSelf ? `<button class="${btnClass}">${btnText}</button>` : ''}
                 </div>`;
             }
+
+            // ── Private request logic ──
             async function handlePrivateChatClick(targetUser) {
-                if(privatePartners.includes(targetUser)) { setActivePrivateChat(targetUser); return; }
+                // If there's a pending request from this user, accept it
                 if(pendingPrivateRequests.has(targetUser)) {
                     const req = pendingPrivateRequests.get(targetUser);
-                    if(req.status==='pending' && req.from_user===targetUser) { await acceptPrivateRequest(targetUser, req.id); return; }
+                    if(req.status === 'pending' && req.from_user === targetUser) {
+                        await acceptPrivateRequest(targetUser, req.id);
+                        return;
+                    }
                 }
                 await sendPrivateRequest(targetUser);
             }
             async function sendPrivateRequest(toUser) {
                 try {
-                    const { error } = await supabase.from('private_chat_requests').insert({ from_user:username, to_user:toUser, status:'pending' });
+                    const { error } = await supabase.from('private_chat_requests').insert({
+                        from_user: username,
+                        to_user: toUser,
+                        status: 'pending'
+                    });
                     if(error) { showErrorToast('Request failed: ' + error.message); return; }
                     showErrorToast('📩 Request sent to ' + toUser);
                     updateSidebarUI();
@@ -951,11 +1114,12 @@
             }
             async function acceptPrivateRequest(fromUser, requestId) {
                 try {
-                    const { error } = await supabase.from('private_chat_requests').update({status:'accepted'}).eq('id', requestId);
+                    const { error } = await supabase.from('private_chat_requests')
+                        .update({status:'accepted'})
+                        .eq('id', requestId);
                     if(error) throw error;
                     pendingPrivateRequests.delete(fromUser);
-                    if(!privatePartners.includes(fromUser)) { privatePartners.push(fromUser); localStorage.setItem(PRIVATE_PARTNERS_KEY, JSON.stringify(privatePartners)); }
-                    setActivePrivateChat(fromUser);
+                    setActivePrivateChat(fromUser);   // This opens the private tab
                     updateSidebarUI();
                     showErrorToast('✅ Chat with ' + fromUser + ' active!');
                 } catch(err) { showErrorToast('Accept error: '+err.message); }
@@ -963,17 +1127,18 @@
             async function loadPendingRequests() {
                 if(!username) return;
                 try {
-                    const { data, error } = await supabase.from('private_chat_requests').select('*').or(`to_user.eq.${username},from_user.eq.${username}`).order('created_at', {ascending:false});
+                    const { data, error } = await supabase.from('private_chat_requests')
+                        .select('*')
+                        .or(`to_user.eq.${username},from_user.eq.${username}`)
+                        .order('created_at', {ascending:false});
                     if(error) return;
                     pendingPrivateRequests.clear();
                     (data||[]).forEach(req => {
-                        if(req.status==='pending' && req.to_user===username) pendingPrivateRequests.set(req.from_user, {status:'pending', id:req.id, from_user:req.from_user});
-                        if(req.status==='accepted') {
-                            const partner = req.from_user===username ? req.to_user : req.from_user;
-                            if(!privatePartners.includes(partner)) privatePartners.push(partner);
+                        if(req.status === 'pending' && req.to_user === username) {
+                            pendingPrivateRequests.set(req.from_user, {status:'pending', id:req.id, from_user:req.from_user});
                         }
+                        // We do NOT store accepted partners – only online users matter
                     });
-                    localStorage.setItem(PRIVATE_PARTNERS_KEY, JSON.stringify(privatePartners));
                     updateSidebarUI();
                 } catch(err) {}
             }
@@ -984,23 +1149,21 @@
                     .on('postgres_changes', { event:'*', schema:'public', table:'private_chat_requests' }, (payload) => {
                         const record = payload.new || payload.old;
                         if(!record) return;
-                        if(record.to_user===username && record.status==='pending') {
+                        if(record.to_user === username && record.status === 'pending') {
                             pendingPrivateRequests.set(record.from_user, {status:'pending', id:record.id, from_user:record.from_user});
                             updateSidebarUI();
                             showErrorToast('📩 Private request from ' + record.from_user);
                         }
-                        if(record.status==='accepted') {
-                            const partner = record.from_user===username ? record.to_user : record.from_user;
-                            if(!privatePartners.includes(partner)) {
-                                privatePartners.push(partner);
-                                localStorage.setItem(PRIVATE_PARTNERS_KEY, JSON.stringify(privatePartners));
-                                updateSidebarUI();
-                                showErrorToast('✅ Chat with ' + partner + ' accepted!');
+                        if(record.status === 'accepted') {
+                            const partner = record.from_user === username ? record.to_user : record.from_user;
+                            if (activePrivateChat !== partner) {
+                                setActivePrivateChat(partner);
                             }
                         }
                     }).subscribe();
             }
 
+            // ── Load messages ──
             async function loadMessages() {
                 setConnectionState('connecting');
                 const controller = new AbortController();
@@ -1013,57 +1176,93 @@
                     clearTimeout(timeoutId);
                     if(!response.ok) throw new Error(`HTTP ${response.status}`);
                     const data = await response.json();
-                    messagesContainer.innerHTML = '';
+                    publicMessagesContainer.innerHTML = '';
+                    privateMessagesContainer.innerHTML = '';
                     knownMessageIds.clear();
-                    if(data.length===0) messagesContainer.innerHTML = '<div class="empty-chat-hint" id="emptyHint">No messages yet. Spark the conversation ⚡</div>';
-                    else data.forEach(msg => renderMessage(msg));
+                    if(data.length===0) {
+                        publicMessagesContainer.innerHTML = '<div class="empty-chat-hint" id="publicEmptyHint">No messages yet. ⚡</div>';
+                        privateMessagesContainer.innerHTML = '<div class="empty-chat-hint" id="privateEmptyHint">No private messages.</div>';
+                    } else {
+                        const users = [...new Set(data.map(m => m.username))];
+                        await fetchAvatars(users);
+                        for (const msg of data) {
+                            await renderMessage(msg);
+                        }
+                    }
                     setConnectionState('connected');
                     messagesLoaded = true;
-                    return true;
                 } catch(err) {
                     clearTimeout(timeoutId);
                     showErrorToast('Load failed: ' + err.message);
                     setConnectionState('disconnected');
-                    return false;
                 }
             }
 
-            async function sendMessage(imageUrl = null) {
-                const message = messageInput.value.trim();
-                if(!message && !imageUrl) return;
+            // ── Send message (finally working for private) ──
+            async function sendMessage() {
+                const messageText = messageInput.value.trim();
+                if(!messageText && !pendingImageUrl) return;
                 if(!username) return;
                 sendBtn.disabled = true;
-                const payload = { username, message: message||null, image_url: imageUrl||null };
+
+                const isPrivate = (currentTab === 'private' && activePrivateChat);
+                if(isPrivate && !activePrivateChat) {
+                    showErrorToast('No private partner selected.');
+                    return;
+                }
+
+                const payload = {
+                    username: username,
+                    message: messageText || null,
+                    image_url: pendingImageUrl || null,
+                    is_private: isPrivate,
+                    recipient: isPrivate ? activePrivateChat : null
+                };
+
                 if(replyingTo && replyingTo.id) {
                     payload.reply_to_id = replyingTo.id;
                     payload.reply_to_username = replyingTo.username;
                     payload.reply_to_message = replyingTo.message;
                     if(replyingTo.imageUrl) payload.reply_to_image_url = replyingTo.imageUrl;
                 }
-                if(activePrivateChat) { payload.is_private = true; payload.recipient = activePrivateChat; }
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+
                 try {
                     let response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
                         method: 'POST',
-                        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(payload)
                     });
-                    clearTimeout(timeoutId);
+
                     if(!response.ok) {
+                        // Retry without reply fields if they caused the error
                         if(payload.reply_to_id) {
-                            const fallback = {...payload}; delete fallback.reply_to_id; delete fallback.reply_to_username; delete fallback.reply_to_message; delete fallback.reply_to_image_url;
+                            const fallback = { ...payload };
+                            delete fallback.reply_to_id;
+                            delete fallback.reply_to_username;
+                            delete fallback.reply_to_message;
+                            delete fallback.reply_to_image_url;
                             response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
                                 method: 'POST',
-                                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                                headers: {
+                                    'apikey': SUPABASE_ANON_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'return=minimal'
+                                },
                                 body: JSON.stringify(fallback)
                             });
                             if(!response.ok) throw new Error(`HTTP ${response.status}`);
                         } else throw new Error(`HTTP ${response.status}`);
                     }
+
                     messageInput.value = '';
                     setReplyingTo(null);
+                    clearAttachedImage();
                 } catch(err) {
                     showErrorToast('Send failed: ' + err.message);
                 } finally {
@@ -1130,33 +1329,35 @@
                 setTimeout(() => refreshBtn.classList.remove('spinning'), 700);
             }
 
-            function applyUsername(name) {
+            async function applyUsername(name) {
                 username = name;
                 localStorage.setItem(STORAGE_KEY_NAME, name);
-                localStorage.setItem(PROFILE_PIC_KEY, profilePic);
                 displayNamePill.textContent = name;
-                headerAvatar.innerHTML = profilePic ? `<img src="${profilePic}" style="width:100%;height:100%;object-fit:cover;">` : (name[0]||'?').toUpperCase();
+
+                if(profilePicFile) {
+                    try {
+                        const url = await uploadToStorage(profilePicFile, AVATAR_BUCKET, 300);
+                        await supabase.from('profiles').upsert({ username: name, avatar_url: url });
+                        avatarCache[name] = url;
+                        headerAvatar.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+                    } catch(err) {
+                        showErrorToast('Avatar upload failed: ' + err.message);
+                    }
+                } else {
+                    headerAvatar.innerHTML = (name[0]||'?').toUpperCase();
+                }
+
                 userPill.style.display = 'flex';
                 inputAreaBar.style.display = 'flex';
                 nameOverlay.classList.add('hidden');
                 setReplyingTo(null);
                 setActivePrivateChat(null);
-                updateSidebarUI();
+                switchTab('public');
+                await updateSidebarUI();
             }
 
-            function checkScrollPosition() {
-                if (messagesContainer.scrollTop + messagesContainer.clientHeight < messagesContainer.scrollHeight - 30) {
-                    scrollBottomBtn.classList.add('visible');
-                } else {
-                    scrollBottomBtn.classList.remove('visible');
-                }
-            }
-            messagesContainer.addEventListener('scroll', checkScrollPosition);
-            scrollBottomBtn.addEventListener('click', () => {
-                messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
-            });
-
-            sendBtn.addEventListener('click', () => sendMessage());
+            // ── Event listeners ──
+            sendBtn.addEventListener('click', sendMessage);
             messageInput.addEventListener('keypress', (e) => { if(e.key==='Enter') sendMessage(); });
             cancelReplyBtn.addEventListener('click', () => setReplyingTo(null));
             cancelPrivateBtn.addEventListener('click', () => setActivePrivateChat(null));
@@ -1164,19 +1365,18 @@
             uploadImgBtn.addEventListener('click', () => fileInput.click());
             fileInput.addEventListener('change', async () => {
                 const file = fileInput.files[0]; if(!file) return;
-                uploadImgBtn.classList.add('uploading');
-                try { const url = await uploadImageToStorage(file); await sendMessage(url); }
-                catch(err) { showErrorToast('Upload failed: '+err.message); }
-                finally { uploadImgBtn.classList.remove('uploading'); fileInput.value = ''; }
+                await attachChatImage(file);
+                fileInput.value = '';
             });
-            messagesContainer.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
-            messagesContainer.addEventListener('drop', async e => {
-                e.preventDefault(); e.stopPropagation();
-                const file = e.dataTransfer.files[0]; if(!file||!file.type.startsWith('image/')) return;
-                uploadImgBtn.classList.add('uploading');
-                try { const url = await uploadImageToStorage(file); await sendMessage(url); }
-                catch(err) { showErrorToast('Upload failed: '+err.message); }
-                finally { uploadImgBtn.classList.remove('uploading'); }
+            imagePreviewRemove.addEventListener('click', clearAttachedImage);
+            [publicMessagesContainer, privateMessagesContainer].forEach(container => {
+                container.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
+                container.addEventListener('drop', async e => {
+                    e.preventDefault(); e.stopPropagation();
+                    const file = e.dataTransfer.files[0];
+                    if(!file || !file.type.startsWith('image/')) return;
+                    await attachChatImage(file);
+                });
             });
             document.addEventListener('paste', async e => {
                 const items = e.clipboardData?.items; if(!items) return;
@@ -1184,20 +1384,33 @@
                     if(item.type.startsWith('image/')) {
                         e.preventDefault();
                         const file = item.getAsFile();
-                        uploadImgBtn.classList.add('uploading');
-                        try { const url = await uploadImageToStorage(file); await sendMessage(url); }
-                        catch(err) { showErrorToast('Paste failed: '+err.message); }
-                        finally { uploadImgBtn.classList.remove('uploading'); }
+                        await attachChatImage(file);
                         break;
                     }
                 }
             });
             lightboxOverlay.addEventListener('click', () => lightboxOverlay.classList.add('hidden'));
-            nameSubmitBtn.addEventListener('click', () => {
+
+            profilePicPreview.addEventListener('click', () => profilePicInput.click());
+            profilePicInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                profilePicFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    profilePicPreview.innerHTML = `<img src="${ev.target.result}" alt="Profile">`;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            nameSubmitBtn.addEventListener('click', async () => {
                 const newName = nameInput.value.trim(); if(!newName) return;
-                applyUsername(newName);
-                if(!messagesLoaded) loadMessages().then(() => { messagesLoaded = true; });
-                subscribeToRealtime(); setupPresence(); subscribeToPrivateRequests(); loadPendingRequests();
+                await applyUsername(newName);
+                if(!messagesLoaded) await loadMessages();
+                subscribeToRealtime();
+                setupPresence();
+                subscribeToPrivateRequests();
+                loadPendingRequests();
                 loadReactionsForMessages();
                 subscribeToReactions();
             });
@@ -1216,24 +1429,32 @@
                     sidebar.classList.remove('open');
                 }
             });
-            profilePicPreview.addEventListener('click', () => profilePicInput.click());
-            profilePicInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if(!file) return;
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    profilePic = ev.target.result;
-                    profilePicPreview.innerHTML = `<img src="${profilePic}" alt="Profile">`;
-                };
-                reader.readAsDataURL(file);
-            });
 
-            function init() {
+            // ── Init ──
+            async function init() {
                 if(window.innerWidth<=768) sidebarToggle.classList.remove('hidden');
                 if(username) {
-                    applyUsername(username);
-                    loadMessages().then(() => { messagesLoaded = true; checkScrollPosition(); });
-                    subscribeToRealtime(); setupPresence(); subscribeToPrivateRequests(); loadPendingRequests();
+                    const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('username', username).single();
+                    if(profile && profile.avatar_url) {
+                        avatarCache[username] = profile.avatar_url;
+                        headerAvatar.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;">`;
+                    } else {
+                        headerAvatar.innerHTML = (username[0]||'?').toUpperCase();
+                    }
+                    displayNamePill.textContent = username;
+                    userPill.style.display = 'flex';
+                    inputAreaBar.style.display = 'flex';
+                    nameOverlay.classList.add('hidden');
+                    setReplyingTo(null);
+                    setActivePrivateChat(null);
+                    switchTab('public');
+                    await updateSidebarUI();
+
+                    await loadMessages();
+                    subscribeToRealtime();
+                    setupPresence();
+                    subscribeToPrivateRequests();
+                    loadPendingRequests();
                     loadReactionsForMessages();
                     subscribeToReactions();
                 } else {
